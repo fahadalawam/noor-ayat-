@@ -1,5 +1,6 @@
-import 'package:ayat/pages/player_page.dart';
 import 'package:flutter/material.dart';
+
+import 'package:ayat/pages/player_page.dart';
 
 class ResumeCard extends StatelessWidget {
   final String surah;

@@ -105,15 +105,31 @@ class _PlayerPageState extends State<PlayerPage> {
                     onDecrement: decrementStart,
                     aya: _start,
                   ),
-                  IconButton(
-                    onPressed: () => setState(() {
-                      _player.playing ? _player.pause() : _player.play();
-                    }),
-                    padding: EdgeInsets.zero,
-                    icon: Icon(
-                      _player.playing ? Icons.pause : Icons.play_arrow,
-                      size: 48,
-                    ),
+                  Column(
+                    children: [
+                      IconButton(
+                        onPressed: () => setState(() {
+                          _player.playing ? _player.pause() : _player.play();
+                        }),
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          _player.playing ? Icons.pause : Icons.play_arrow,
+                          size: 48,
+                        ),
+                      ),
+                      Slider(
+                        value: _currentVerse.toDouble(),
+                        onChanged: (val) async {
+                          setState(() {
+                            _currentVerse = val.toInt();
+                          });
+                          await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+                        },
+                        min: _start.toDouble(),
+                        max: _end.toDouble(),
+                        // divisions: _end - _start + 1,
+                      ),
+                    ],
                   ),
                   ClipButton(
                     onIncrement: incrementEnd,
@@ -136,18 +152,20 @@ class _PlayerPageState extends State<PlayerPage> {
         _end = _end + 1;
       }
       _start = _start + 1;
-      _currentVerse = _start;
+      // _currentVerse = _start;
     });
-    await _player.seek(Duration(milliseconds: _positions[_start - 1]));
+    if (_start <= _currentVerse) return;
+    _currentVerse = _start;
+    await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
   }
 
   void decrementStart() async {
     if (_start <= 1) return;
     setState(() {
       _start = _start - 1;
-      _currentVerse = _start;
+      // _currentVerse = _start;
     });
-    await _player.seek(Duration(milliseconds: _positions[_start - 1]));
+    // await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
   }
 
   void incrementEnd() async {
