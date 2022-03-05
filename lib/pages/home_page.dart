@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 // import 'package:audioplayers/audioplayers.dart';
 // import 'package:just_audio/just_audio.dart';
 
+import 'package:quran/quran.dart' as quran;
+
 import '../widgets/statics_card.dart';
 import '../widgets/resume_card.dart';
 
@@ -57,13 +59,13 @@ class HomePage extends StatelessWidget {
             ),
             SliverGrid(
               delegate: SliverChildListDelegate(
-                List.generate(100, (index) => index + 1)
-                    .map((e) => InkWell(
+                List.generate(114, (index) => index + 1)
+                    .map((i) => InkWell(
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => PlayerPage(
-                                surahNumber: e,
+                                surahNumber: i,
                                 start: 1,
                                 end: 3,
                               ),
@@ -75,7 +77,7 @@ class HomePage extends StatelessWidget {
                             child: Container(
                               // margin: const EdgeInsets.all(4),
                               child: Text(
-                                e.toString(),
+                                quran.getSurahNameArabic(i),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 36,

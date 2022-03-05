@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:ayat/utils/Times.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'dart:io';
+import 'package:ayat/utils/timing.dart';
+
 import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
@@ -36,7 +33,7 @@ class _PlayerPageState extends State<PlayerPage> {
   late int _currentVerse;
   late ScrollController _controller;
 // TODO: get times from API.
-  final _positions = Times().positons;
+  final List<int> _positions = Timing(surahId: 2).positons;
 
   @override
   void initState() {
@@ -57,7 +54,7 @@ class _PlayerPageState extends State<PlayerPage> {
 
     int _tick = 100;
     final String _s = _srahNumber.toString().padLeft(3, '0');
-    _duration = await _player.setUrl('https://server7.mp3quran.net/s_gmd/$_s.mp3');
+    _duration = await _player.setUrl('https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/$_srahNumber.mp3');
     _duration = await _player.load();
 
     _player.seek(Duration(milliseconds: _positions[_start - 1]));
