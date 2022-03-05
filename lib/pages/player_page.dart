@@ -12,9 +12,15 @@ import 'package:just_audio/just_audio.dart';
 import 'package:quran/quran.dart' as quran;
 
 class PlayerPage extends StatefulWidget {
-  int? start;
-  int? end;
-  PlayerPage({Key? key, this.start, this.end}) : super(key: key);
+  int start;
+  int end;
+  int surahNumber;
+  PlayerPage({
+    Key? key,
+    required this.surahNumber,
+    required this.start,
+    required this.end,
+  }) : super(key: key);
 
   @override
   State<PlayerPage> createState() => _PlayerPageState();
@@ -24,10 +30,11 @@ class _PlayerPageState extends State<PlayerPage> {
   late AudioPlayer _player;
   late AudioPlayer _clip;
   late Duration? _duration;
+  late int _srahNumber;
   late int _start;
   late int _end;
   late int _currentVerse;
-
+  late ScrollController _controller;
 // TODO: get times from API.
   final _positions = Times().positons;
 
@@ -35,10 +42,13 @@ class _PlayerPageState extends State<PlayerPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _start = widget.start ?? 0;
+    _srahNumber = widget.surahNumber;
+    _start = widget.start;
     _currentVerse = _start;
-    _end = widget.end ?? _positions.length - 1;
+    _end = widget.end;
     _player = AudioPlayer();
+
+    _controller = ScrollController();
   }
 
   @override
@@ -46,7 +56,8 @@ class _PlayerPageState extends State<PlayerPage> {
     super.didChangeDependencies();
 
     int _tick = 100;
-    _duration = await _player.setUrl('https://server7.mp3quran.net/s_gmd/057.mp3');
+    final String _s = _srahNumber.toString().padLeft(3, '0');
+    _duration = await _player.setUrl('https://server7.mp3quran.net/s_gmd/$_s.mp3');
     _duration = await _player.load();
 
     _player.seek(Duration(milliseconds: _positions[_start - 1]));
@@ -70,6 +81,13 @@ class _PlayerPageState extends State<PlayerPage> {
     });
   }
 
+  void jumpTo(int verse) async {
+    setState(() {
+      _currentVerse = verse;
+    });
+    await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+  }
+
   @override
   Widget build(BuildContext context) {
     //timer for updating the position
@@ -86,9 +104,11 @@ class _PlayerPageState extends State<PlayerPage> {
               child: Center(
                 child: SingleChildScrollView(
                   child: QuranText(
+                    surahNumber: _srahNumber,
                     start: _start,
                     end: _end,
                     current: _currentVerse,
+                    jumpTo: jumpTo,
                   ),
                 ),
               ),
@@ -105,31 +125,15 @@ class _PlayerPageState extends State<PlayerPage> {
                     onDecrement: decrementStart,
                     aya: _start,
                   ),
-                  Column(
-                    children: [
-                      IconButton(
-                        onPressed: () => setState(() {
-                          _player.playing ? _player.pause() : _player.play();
-                        }),
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          _player.playing ? Icons.pause : Icons.play_arrow,
-                          size: 48,
-                        ),
-                      ),
-                      Slider(
-                        value: _currentVerse.toDouble(),
-                        onChanged: (val) async {
-                          setState(() {
-                            _currentVerse = val.toInt();
-                          });
-                          await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
-                        },
-                        min: _start.toDouble(),
-                        max: _end.toDouble(),
-                        // divisions: _end - _start + 1,
-                      ),
-                    ],
+                  IconButton(
+                    onPressed: () => setState(() {
+                      _player.playing ? _player.pause() : _player.play();
+                    }),
+                    padding: EdgeInsets.zero,
+                    icon: Icon(
+                      _player.playing ? Icons.pause : Icons.play_arrow,
+                      size: 48,
+                    ),
                   ),
                   ClipButton(
                     onIncrement: incrementEnd,
@@ -179,8 +183,10 @@ class _PlayerPageState extends State<PlayerPage> {
     if (_end <= 1) return;
     setState(() {
       _end = _end - 1;
-      if (_end <= _start) {
-        _start = _end;
+      if (_end <= _start) _start = _end;
+      if (_end < _currentVerse) {
+        _currentVerse = _start;
+        _player.seek(Duration(milliseconds: _positions[_start - 1]));
       }
     });
   }
@@ -231,14 +237,17 @@ class ClipButton extends StatelessWidget {
 class QuranText extends StatelessWidget {
   final int start;
   final int end;
-  final surahNumber = 57;
+  final surahNumber;
   final int current;
+  final Function jumpTo;
 
   QuranText({
     Key? key,
+    required this.surahNumber,
     required this.start,
     required this.end,
     required this.current,
+    required this.jumpTo,
   }) : super(key: key);
 
   @override
@@ -268,7 +277,7 @@ class QuranText extends StatelessWidget {
               ),
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  print('$verse - ${start + i}');
+                  jumpTo(start + i);
                 },
             );
           }),

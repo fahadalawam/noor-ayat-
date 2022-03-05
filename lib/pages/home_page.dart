@@ -1,3 +1,4 @@
+import 'package:ayat/pages/player_page.dart';
 import 'package:flutter/material.dart';
 
 // import 'package:audioplayers/audioplayers.dart';
@@ -56,26 +57,36 @@ class HomePage extends StatelessWidget {
             ),
             SliverGrid(
               delegate: SliverChildListDelegate(
-                [
-                  ...List.generate(100, (index) => index + 1)
-                      .map((e) => Container(
-                            margin: const EdgeInsets.all(4),
-                            child: Text(
-                              e.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
+                List.generate(100, (index) => index + 1)
+                    .map((e) => InkWell(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PlayerPage(
+                                surahNumber: e,
+                                start: 1,
+                                end: 3,
                               ),
                             ),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Card(
+                            color: Colors.blue,
+                            // margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Container(
+                              // margin: const EdgeInsets.all(4),
+                              child: Text(
+                                e.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              alignment: Alignment.center,
                             ),
-                          ))
-                      .toList(),
-                ],
+                          ),
+                        ))
+                    .toList(),
               ),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,

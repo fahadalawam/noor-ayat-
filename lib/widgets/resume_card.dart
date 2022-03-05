@@ -30,7 +30,14 @@ class ResumeCard extends StatelessWidget {
             title: Text('سورة $surah  .  $reciter'),
             subtitle: Text('$start - $end'),
             trailing: const Icon(Icons.play_arrow),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PlayerPage(start: start, end: end))),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PlayerPage(
+                          surahNumber: 57,
+                          start: start,
+                          end: end,
+                        ))),
           ),
         ),
       ),
