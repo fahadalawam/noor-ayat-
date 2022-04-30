@@ -48,10 +48,10 @@ class HomePage extends StatelessWidget {
                     ),
                   const SizedBox(height: 10),
                   const ResumeCard(
-                    surah: 'الحديد',
+                    surah: 'الاحقاف',
                     reciter: 'سعد الغامدي',
-                    start: 10,
-                    end: 15,
+                    start: 1,
+                    end: 5,
                   ),
                   const SizedBox(height: 10),
                 ],

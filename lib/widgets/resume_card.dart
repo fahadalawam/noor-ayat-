@@ -34,7 +34,7 @@ class ResumeCard extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                     builder: (context) => PlayerPage(
-                          surahNumber: 57,
+                          surahNumber: 46,
                           start: start,
                           end: end,
                         ))),

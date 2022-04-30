@@ -54,7 +54,7 @@ class _PlayerPageState extends State<PlayerPage> {
 
     int _tick = 100;
     final String _s = _srahNumber.toString().padLeft(3, '0');
-    _duration = await _player.setUrl('https://download.quranicaudio.com/qdc/khalil_al_husary/murattal/$_srahNumber.mp3');
+    _duration = await _player.setUrl('https://download.quranicaudio.com/qdc/abu_bakr_shatri/murattal/46.mp3');
     _duration = await _player.load();
 
     _player.seek(Duration(milliseconds: _positions[_start - 1]));
