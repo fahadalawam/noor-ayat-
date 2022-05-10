@@ -1,5 +1,7 @@
 import 'package:ayat/pages/player_page.dart';
+import 'package:ayat/providers/prevs.dart';
 import 'package:flutter/material.dart';
+import 'package:quran/quran.dart';
 
 // import 'package:audioplayers/audioplayers.dart';
 // import 'package:just_audio/just_audio.dart';
@@ -9,16 +11,19 @@ import 'package:quran/quran.dart' as quran;
 import '../widgets/statics_card.dart';
 import '../widgets/resume_card.dart';
 
+// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+
 class HomePage extends StatelessWidget {
   HomePage({Key? key}) : super(key: key);
 
   final ScrollController _scrollController = ScrollController();
 
-  final bool _isOk = true;
-
   @override
   Widget build(BuildContext context) {
-    // final List _list = List.generate(20, (index) => index);
+    final prev = Provider.of<Prevs>(context).lastSave;
+
+    print(prev.toString());
     return SafeArea(
       child: Scaffold(
         body: CustomScrollView(
@@ -32,27 +37,22 @@ class HomePage extends StatelessWidget {
                   const StaticsCard(height: 50),
                   const SizedBox(height: 10),
                   const SizedBox(height: 10),
-                  if (_isOk)
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(10, (index) => index).map((index) {
-                          return Container(
-                            width: 100,
-                            height: 50,
-                            color: Colors.blue,
-                            margin: const EdgeInsets.all(2),
-                          );
-                        }).toList(),
-                      ),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children:
+                          List.generate(10, (index) => index).map((index) {
+                        return Container(
+                          width: 100,
+                          height: 50,
+                          color: Colors.blue,
+                          margin: const EdgeInsets.all(2),
+                        );
+                      }).toList(),
                     ),
-                  const SizedBox(height: 10),
-                  const ResumeCard(
-                    surah: 'الاحقاف',
-                    reciter: 'سعد الغامدي',
-                    start: 1,
-                    end: 5,
                   ),
+                  const SizedBox(height: 10),
+                  ResumeCard(),
                   const SizedBox(height: 10),
                 ],
               ),
@@ -70,7 +70,7 @@ class HomePage extends StatelessWidget {
                                 end: 3,
                               ),
                             ),
-                          ),
+                          ).then((value) => print('back ====')),
                           child: Card(
                             color: Colors.blue,
                             // margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
