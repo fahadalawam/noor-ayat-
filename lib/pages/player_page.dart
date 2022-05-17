@@ -7,7 +7,8 @@ import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
 
-import 'package:just_audio/just_audio.dart';
+// import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:quran/quran.dart' as quran;
 import 'package:wakelock/wakelock.dart';
 
@@ -40,7 +41,7 @@ class PlayerPage extends StatefulWidget {
 class _PlayerPageState extends State<PlayerPage> {
   late AudioPlayer _player;
   late AudioPlayer _clip;
-  late Duration? _duration;
+  late int? _duration;
   late int _surahNumber;
   late int _start;
   late int _end;
@@ -91,16 +92,21 @@ class _PlayerPageState extends State<PlayerPage> {
     //https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/067.mp3
     String s = _surahNumber.toString().padLeft(3, '0');
 
-    _duration = await _player.setUrl(
+    _player = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
+    await _player.setUrl(
         'https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
-    _duration = await _player.load();
+    _duration = await _player.getDuration();
+
+    // _duration = await _player.setUrl(
+    //     'https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
+    // _duration = await _player.load();
 
     await Timing(surahId: _surahNumber).fetchTiming().then((value) {
       setState(() {
         _positions = value;
         _isLoading = false;
         _player.seek(Duration(milliseconds: _positions[_start - 1]));
-        _player.play();
+        _player.resume();
       });
     });
 
@@ -112,36 +118,36 @@ class _PlayerPageState extends State<PlayerPage> {
 
     _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
       // print(_positions);
-      if (_player.playing) {
-        final position = _player.position;
+      if (_player.state == PlayerState.PLAYING) {
+        // final position = _player.position;
 
-        if (isolatedVers != null) {
-          if (position.inMilliseconds > _positions[isolatedVers!]) {
-            await _player
-                .seek(Duration(milliseconds: _positions[isolatedVers! - 1]));
-          }
-          return;
-        }
+        // if (isolatedVers != null) {
+        //   if (position.inMilliseconds > _positions[isolatedVers!]) {
+        //     await _player
+        //         .seek(Duration(milliseconds: _positions[isolatedVers! - 1]));
+        //   }
+        //   return;
+        // }
 
-        if (position.inMilliseconds >= _positions[_currentVerse]) {
-          setState(() {
-            _currentVerse++;
-          });
-        }
+        // if (position.inMilliseconds >= _positions[_currentVerse]) {
+        //   setState(() {
+        //     _currentVerse++;
+        //   });
+        // }
 
-        if (position.inMilliseconds > _positions[_end]) {
-          _player.seek(Duration(milliseconds: _positions[_start - 1]));
-          setState(() {
-            _currentVerse = _start;
-            _player.pause();
-            _isLoading = true;
-          });
-          await Future.delayed(const Duration(seconds: 2));
-          setState(() {
-            _isLoading = false;
-            _player.play();
-          });
-        }
+        // if (position.inMilliseconds > _positions[_end]) {
+        //   _player.seek(Duration(milliseconds: _positions[_start - 1]));
+        //   setState(() {
+        //     _currentVerse = _start;
+        //     _player.pause();
+        //     _isLoading = true;
+        //   });
+        //   await Future.delayed(const Duration(seconds: 2));
+        //   setState(() {
+        //     _isLoading = false;
+        //     _player.play();
+        //   });
+        // }
       }
     });
   }
@@ -165,7 +171,7 @@ class _PlayerPageState extends State<PlayerPage> {
           _selectionMode = null;
         });
       }
-      _player.play();
+      _player.resume();
       return;
     }
 
@@ -218,46 +224,53 @@ class _PlayerPageState extends State<PlayerPage> {
                 ),
               ),
             ),
-            Container(
-              height: 150,
-              width: double.infinity,
-              color: Colors.grey,
-              child: _selectionMode != null
-                  ? _showSelectPanel()
-                  : _isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            ClipButton(
-                              onIncrement: incrementStart,
-                              onDecrement: decrementStart,
-                              onSelect: _selectStart,
-                              aya: _start,
-                            ),
-                            IconButton(
-                              onPressed: () => setState(() {
-                                _player.playing
-                                    ? _player.pause()
-                                    : _player.play();
-                              }),
-                              padding: EdgeInsets.zero,
-                              icon: Icon(
-                                _player.playing
-                                    ? Icons.pause
-                                    : Icons.play_arrow,
-                                size: 48,
+            StreamBuilder<Object>(
+                stream: _player.onAudioPositionChanged,
+                builder: (context, snapshot) {
+                  print(snapshot.data);
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey,
+                    child: _selectionMode != null
+                        ? _showSelectPanel()
+                        : _isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  ClipButton(
+                                    onIncrement: incrementStart,
+                                    onDecrement: decrementStart,
+                                    onSelect: _selectStart,
+                                    aya: _start,
+                                  ),
+                                  IconButton(
+                                    onPressed: () {},
+                                    // () => setState(() {
+                                    //   _player.playing
+                                    //       ? _player.pause()
+                                    //       : _player.play();
+                                    // }),
+                                    padding: EdgeInsets.zero,
+                                    icon: Icon(
+                                      // _player.playing
+                                      //     ? Icons.pause
+                                      //     :
+                                      Icons.play_arrow,
+                                      size: 48,
+                                    ),
+                                  ),
+                                  ClipButton(
+                                    onIncrement: incrementEnd,
+                                    onDecrement: decrementEnd,
+                                    onSelect: _selectEnd,
+                                    aya: _end,
+                                  ),
+                                ],
                               ),
-                            ),
-                            ClipButton(
-                              onIncrement: incrementEnd,
-                              onDecrement: decrementEnd,
-                              onSelect: _selectEnd,
-                              aya: _end,
-                            ),
-                          ],
-                        ),
-            )
+                  );
+                })
           ],
         ),
       ),
@@ -278,7 +291,7 @@ class _PlayerPageState extends State<PlayerPage> {
                 _start = _tempStart;
                 _end = _tempEnd;
               });
-              _player.play();
+              // _player.play();
             }),
       ],
     );
