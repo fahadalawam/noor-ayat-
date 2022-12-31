@@ -12,8 +12,7 @@ class Timing {
 
   Future<List<int>> fetchTiming() async {
     int reciterId = 10;
-    final url =
-        'https://api.qurancdn.com/api/qdc/audio/reciters/$reciterId/audio_files?chapter=$surahId&segments=true';
+    final url = 'https://api.qurancdn.com/api/qdc/audio/reciters/$reciterId/audio_files?chapter=$surahId&segments=true';
     final res = await http.get(Uri.parse(url));
     List data = jsonDecode(res.body)['audio_files'][0]['verse_timings'];
     // print(data.toString());

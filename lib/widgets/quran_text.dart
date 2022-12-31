@@ -44,14 +44,13 @@ class QuranText extends StatelessWidget {
           ),
           children: List.generate(_listLength, (i) {
             String verse = quran.getVerse(surahNumber, start + i);
+            String endSymbol = quran.getVerseEndSymbol(start + i);
             return TextSpan(
               text: '$verse   (${start + i})   ',
+              // text: '$verse   $endSymbol   ',
               style: isolatedVers == null
-                  ? TextStyle(
-                      color: current == start + i ? Colors.blue : Colors.black)
-                  : TextStyle(
-                      color:
-                          current == start + i ? Colors.blue : Colors.black12),
+                  ? TextStyle(color: current == start + i ? Colors.blue : Colors.black)
+                  : TextStyle(color: current == start + i ? Colors.blue : Colors.black12),
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
                   tap(start + i);
