@@ -21,6 +21,8 @@ import '../widgets/clip_button.dart';
 
 enum SelectionMode { start, end }
 
+enum DelayMode { noDelay, everAya, endOfLoop }
+
 class PlayerPage extends StatefulWidget {
   static const PAGE_NAME = 'player-page/';
 
@@ -41,7 +43,7 @@ class PlayerPage extends StatefulWidget {
 class _PlayerPageState extends State<PlayerPage> {
   late AudioPlayer _player;
   late AudioPlayer _clip;
-  late int? _duration;
+  // late int? _duration;
   late int _surahNumber;
   late int _start;
   late int _end;
@@ -52,11 +54,13 @@ class _PlayerPageState extends State<PlayerPage> {
 // TODO: get times from API.
   late List<int> _positions;
   bool _isLoading = true;
+  Duration _waitingDuration = Duration.zero;
 
   late Timer _timer;
 
   int? isolatedVers;
   SelectionMode? _selectionMode;
+  DelayMode _delayMode = DelayMode.noDelay;
 
   @override
   void initState() {
@@ -79,6 +83,7 @@ class _PlayerPageState extends State<PlayerPage> {
     Wakelock.toggle(enable: false);
     _player.stop();
     _player.dispose();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -86,20 +91,10 @@ class _PlayerPageState extends State<PlayerPage> {
   void didChangeDependencies() async {
     super.didChangeDependencies();
 
-    int _tick = 50;
-    //saud_ash-shuraym 10
-    //abu_bakr_shatri 4
-    //https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/067.mp3
     String s = _surahNumber.toString().padLeft(3, '0');
-
-    _player = AudioPlayer(mode: PlayerMode.MEDIA_PLAYER);
-    await _player.setUrl(
-        'https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
-    _duration = await _player.getDuration();
-
-    // _duration = await _player.setUrl(
-    //     'https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
-    // _duration = await _player.load();
+    // String s = _surahNumber.toString();
+    _player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+    await _player.setUrl('https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
 
     await Timing(surahId: _surahNumber).fetchTiming().then((value) {
       setState(() {
@@ -110,46 +105,60 @@ class _PlayerPageState extends State<PlayerPage> {
       });
     });
 
-    Provider.of<Prevs>(context, listen: false).saveLatest(Clip(
-      surahNumber: _surahNumber,
-      start: _start,
-      end: _end,
-    ));
+    int _tick = 50;
+    // _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
+    //   if (_player.state == PlayerState.PLAYING) {
+    //     final position = await _player.getCurrentPosition();
 
-    _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
-      // print(_positions);
-      if (_player.state == PlayerState.PLAYING) {
-        // final position = _player.position;
+    //     if (position >= _positions[_currentVerse]) {
+    //       print('ayyya');
+    //       _goToNextVeres();
+    //     }
 
-        // if (isolatedVers != null) {
-        //   if (position.inMilliseconds > _positions[isolatedVers!]) {
-        //     await _player
-        //         .seek(Duration(milliseconds: _positions[isolatedVers! - 1]));
-        //   }
-        //   return;
-        // }
+    //     if (position > _positions[_end]){
+    //       print('enddddd');
 
-        // if (position.inMilliseconds >= _positions[_currentVerse]) {
-        //   setState(() {
-        //     _currentVerse++;
-        //   });
-        // }
+    //     _goToFirstVerse();
+    //     }
+    //   }
+    // });
+  }
 
-        // if (position.inMilliseconds > _positions[_end]) {
-        //   _player.seek(Duration(milliseconds: _positions[_start - 1]));
-        //   setState(() {
-        //     _currentVerse = _start;
-        //     _player.pause();
-        //     _isLoading = true;
-        //   });
-        //   await Future.delayed(const Duration(seconds: 2));
-        //   setState(() {
-        //     _isLoading = false;
-        //     _player.play();
-        //   });
-        // }
-      }
+  Future<void> _startAyaDelay() async {
+    _player.pause();
+    final prevDuration = _currentVerse == 0 ? 0 : _positions[_currentVerse - 1];
+    await Future.delayed(Duration(milliseconds: _positions[_currentVerse] - prevDuration));
+  }
+
+  Future<void> _startEndDelay() {
+    _player.pause();
+
+    final delay = _positions[_end] - _positions[_start];
+    return Future.delayed(Duration(milliseconds: delay));
+  }
+
+  void _goToFirstVerse() async {
+    if (_delayMode == DelayMode.endOfLoop) await _startEndDelay();
+
+    _player.seek(Duration(milliseconds: _positions[_start - 1]));
+    setState(() {
+      _currentVerse = _start;
+      _player.pause();
+      _isLoading = true;
     });
+    await Future.delayed(const Duration(milliseconds: 1000));
+    setState(() {
+      _isLoading = false;
+      _player.resume();
+    });
+  }
+
+  void _goToNextVeres() async {
+    if (_delayMode == DelayMode.everAya) await _startAyaDelay();
+    setState(() {
+      _currentVerse++;
+    });
+    if (_delayMode == DelayMode.everAya) _player.resume();
   }
 
   void onSelect(int verse) async {
@@ -159,6 +168,7 @@ class _PlayerPageState extends State<PlayerPage> {
         setState(() {
           _start = verse;
           _end = _tempEnd;
+          _currentVerse = _start;
           _selectionMode = null;
         });
       }
@@ -168,9 +178,12 @@ class _PlayerPageState extends State<PlayerPage> {
         setState(() {
           _end = verse;
           _start = _tempStart;
+          _currentVerse = _start;
           _selectionMode = null;
         });
       }
+
+      await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
       _player.resume();
       return;
     }
@@ -208,6 +221,28 @@ class _PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            DropdownButton<DelayMode>(
+              onChanged: (val) {
+                setState(() {
+                  if (val != null) _delayMode = val;
+                });
+              },
+              value: _delayMode,
+              items: [
+                DropdownMenuItem(
+                  value: DelayMode.noDelay,
+                  child: Text('لا تتوقف'),
+                ),
+                DropdownMenuItem(
+                  value: DelayMode.everAya,
+                  child: Text('بعد كل آية'),
+                ),
+                DropdownMenuItem(
+                  value: DelayMode.endOfLoop,
+                  child: Text('في النهاية'),
+                ),
+              ],
+            ),
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -224,53 +259,43 @@ class _PlayerPageState extends State<PlayerPage> {
                 ),
               ),
             ),
-            StreamBuilder<Object>(
-                stream: _player.onAudioPositionChanged,
-                builder: (context, snapshot) {
-                  print(snapshot.data);
-                  return Container(
-                    height: 150,
-                    width: double.infinity,
-                    color: Colors.grey,
-                    child: _selectionMode != null
-                        ? _showSelectPanel()
-                        : _isLoading
-                            ? Center(child: CircularProgressIndicator())
-                            : Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  ClipButton(
-                                    onIncrement: incrementStart,
-                                    onDecrement: decrementStart,
-                                    onSelect: _selectStart,
-                                    aya: _start,
-                                  ),
-                                  IconButton(
-                                    onPressed: () {},
-                                    // () => setState(() {
-                                    //   _player.playing
-                                    //       ? _player.pause()
-                                    //       : _player.play();
-                                    // }),
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(
-                                      // _player.playing
-                                      //     ? Icons.pause
-                                      //     :
-                                      Icons.play_arrow,
-                                      size: 48,
-                                    ),
-                                  ),
-                                  ClipButton(
-                                    onIncrement: incrementEnd,
-                                    onDecrement: decrementEnd,
-                                    onSelect: _selectEnd,
-                                    aya: _end,
-                                  ),
-                                ],
+            Container(
+              height: 150,
+              width: double.infinity,
+              color: Colors.grey,
+              child: _selectionMode != null
+                  ? _showSelectPanel()
+                  : _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            ClipButton(
+                              onIncrement: incrementStart,
+                              onDecrement: decrementStart,
+                              onSelect: _selectStart,
+                              aya: _start,
+                            ),
+                            IconButton(
+                              // onPressed: () {},
+                              onPressed: () => setState(() {
+                                _player.state == PlayerState.PLAYING ? _player.pause() : _player.resume();
+                              }),
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                _player.state == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
+                                size: 48,
                               ),
-                  );
-                })
+                            ),
+                            ClipButton(
+                              onIncrement: incrementEnd,
+                              onDecrement: decrementEnd,
+                              onSelect: _selectEnd,
+                              aya: _end,
+                            ),
+                          ],
+                        ),
+            ),
           ],
         ),
       ),

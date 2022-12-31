@@ -24,8 +24,7 @@ class Prevs with ChangeNotifier {
   }
 
   void saveLatest(Clip? clip) {
-    _lastSave = clip;
-    _save(_lastSave);
+    _save(clip);
     notifyListeners();
   }
 
