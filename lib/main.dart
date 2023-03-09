@@ -1,4 +1,4 @@
-import 'package:ayat/providers/prevs.dart';
+import './providers/prevs.dart';
 import 'package:flutter/material.dart';
 import './pages/home_page.dart';
 import 'package:provider/provider.dart';

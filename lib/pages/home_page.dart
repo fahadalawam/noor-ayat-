@@ -1,5 +1,5 @@
-import 'package:ayat/pages/player_page.dart';
-import 'package:ayat/providers/prevs.dart';
+import '../pages/player_page.dart';
+import '../providers/prevs.dart';
 import 'package:flutter/material.dart';
 import 'package:quran/quran.dart';
 
@@ -40,8 +40,7 @@ class HomePage extends StatelessWidget {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children:
-                          List.generate(10, (index) => index).map((index) {
+                      children: List.generate(10, (index) => index).map((index) {
                         return Container(
                           width: 100,
                           height: 50,

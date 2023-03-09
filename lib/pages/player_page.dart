@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:ayat/models/clip.dart';
-import 'package:ayat/providers/prevs.dart';
-import 'package:ayat/utils/timing.dart';
+import '../models/clip.dart';
+import '../providers/prevs.dart';
+import '../utils/timing.dart';
 
 import 'package:flutter/gestures.dart';
 
