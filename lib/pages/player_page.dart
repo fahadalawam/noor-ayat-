@@ -1,23 +1,17 @@
 import 'dart:async';
-import '../models/clip.dart';
-import '../providers/prevs.dart';
-import '../utils/timing.dart';
-
-import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
-
-// import 'package:just_audio/just_audio.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:quran/quran.dart' as quran;
-import 'package:wakelock/wakelock.dart';
-
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wakelock/wakelock.dart';
+import 'package:quran/quran.dart' as quran;
 
+import '../providers/prevs.dart';
+import '../models/clip.dart';
+import '../utils/timing.dart';
 import '../widgets/quran_text.dart';
 import '../widgets/clip_button.dart';
-
-// import 'package:shared_preferences/shared_preferences.dart';
 
 enum SelectionMode { start, end }
 
@@ -42,8 +36,6 @@ class PlayerPage extends StatefulWidget {
 
 class _PlayerPageState extends State<PlayerPage> {
   late AudioPlayer _player;
-  late AudioPlayer _clip;
-  // late int? _duration;
   late int _surahNumber;
   late int _start;
   late int _end;
@@ -54,7 +46,6 @@ class _PlayerPageState extends State<PlayerPage> {
 // TODO: get times from API.
   late List<int> _positions;
   bool _isLoading = true;
-  Duration _waitingDuration = Duration.zero;
 
   late Timer _timer;
 
@@ -92,7 +83,6 @@ class _PlayerPageState extends State<PlayerPage> {
     super.didChangeDependencies();
 
     String s = _surahNumber.toString().padLeft(3, '0');
-    // String s = _surahNumber.toString();
     _player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
     await _player.setUrl('https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
 
@@ -105,23 +95,30 @@ class _PlayerPageState extends State<PlayerPage> {
       });
     });
 
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    final delayModeIndex = sp.getInt('delayModeIndex') ?? 0;
+
+    setState(() {
+      _delayMode = DelayMode.values.elementAt(delayModeIndex);
+    });
+
     int _tick = 50;
-    // _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
-    //   if (_player.state == PlayerState.PLAYING) {
-    //     final position = await _player.getCurrentPosition();
+    _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
+      if (_player.state == PlayerState.PLAYING) {
+        final position = await _player.getCurrentPosition();
 
-    //     if (position >= _positions[_currentVerse]) {
-    //       print('ayyya');
-    //       _goToNextVeres();
-    //     }
+        if (position >= _positions[_currentVerse]) {
+          print('ayyya');
+          _goToNextVeres();
+        }
 
-    //     if (position > _positions[_end]){
-    //       print('enddddd');
+        if (position > _positions[_end]) {
+          print('enddddd');
 
-    //     _goToFirstVerse();
-    //     }
-    //   }
-    // });
+          _goToFirstVerse();
+        }
+      }
+    });
   }
 
   Future<void> _startAyaDelay() async {
@@ -222,10 +219,12 @@ class _PlayerPageState extends State<PlayerPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DropdownButton<DelayMode>(
-              onChanged: (val) {
+              onChanged: (val) async {
                 setState(() {
                   if (val != null) _delayMode = val;
                 });
+                SharedPreferences sp = await SharedPreferences.getInstance();
+                sp.setInt('delayModeIndex', _delayMode.index);
               },
               value: _delayMode,
               items: [
