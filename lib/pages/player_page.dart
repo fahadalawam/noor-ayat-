@@ -62,6 +62,7 @@ class _PlayerPageState extends State<PlayerPage> {
     _start = widget.start;
     _currentVerse = _start;
     _end = widget.end;
+
     _player = AudioPlayer();
 
     _controller = ScrollController();
@@ -218,27 +219,57 @@ class _PlayerPageState extends State<PlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DropdownButton<DelayMode>(
-              onChanged: (val) async {
-                setState(() {
-                  if (val != null) _delayMode = val;
-                });
-                SharedPreferences sp = await SharedPreferences.getInstance();
-                sp.setInt('delayModeIndex', _delayMode.index);
-              },
-              value: _delayMode,
-              items: [
-                DropdownMenuItem(
-                  value: DelayMode.noDelay,
-                  child: Text('لا تتوقف'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                DropdownButton<DelayMode>(
+                  onChanged: (val) async {
+                    setState(() {
+                      if (val != null) _delayMode = val;
+                    });
+                    SharedPreferences sp = await SharedPreferences.getInstance();
+                    sp.setInt('delayModeIndex', _delayMode.index);
+                  },
+                  value: _delayMode,
+                  items: [
+                    DropdownMenuItem(
+                      value: DelayMode.noDelay,
+                      child: Text('لا تتوقف'),
+                    ),
+                    DropdownMenuItem(
+                      value: DelayMode.everAya,
+                      child: Text('بعد كل آية'),
+                    ),
+                    DropdownMenuItem(
+                      value: DelayMode.endOfLoop,
+                      child: Text('في النهاية'),
+                    ),
+                  ],
                 ),
-                DropdownMenuItem(
-                  value: DelayMode.everAya,
-                  child: Text('بعد كل آية'),
-                ),
-                DropdownMenuItem(
-                  value: DelayMode.endOfLoop,
-                  child: Text('في النهاية'),
+                const SizedBox(width: 30),
+                DropdownButton<DelayMode>(
+                  onChanged: (val) async {
+                    setState(() {
+                      if (val != null) _delayMode = val;
+                    });
+                    SharedPreferences sp = await SharedPreferences.getInstance();
+                    sp.setInt('delayModeIndex', _delayMode.index);
+                  },
+                  value: _delayMode,
+                  items: [
+                    DropdownMenuItem(
+                      value: DelayMode.noDelay,
+                      child: Text('لا تتوقف'),
+                    ),
+                    DropdownMenuItem(
+                      value: DelayMode.everAya,
+                      child: Text('بعد كل آية'),
+                    ),
+                    DropdownMenuItem(
+                      value: DelayMode.endOfLoop,
+                      child: Text('في النهاية'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -275,16 +306,21 @@ class _PlayerPageState extends State<PlayerPage> {
                               onSelect: _selectStart,
                               aya: _start,
                             ),
-                            IconButton(
-                              // onPressed: () {},
-                              onPressed: () => setState(() {
-                                _player.state == PlayerState.PLAYING ? _player.pause() : _player.resume();
-                              }),
-                              padding: EdgeInsets.zero,
-                              icon: Icon(
-                                _player.state == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
-                                size: 48,
-                              ),
+                            Column(
+                              children: [
+                                IconButton(onPressed: () {}, icon: Icon(Icons.keyboard_double_arrow_up_rounded)),
+                                IconButton(
+                                  // onPressed: () {},
+                                  onPressed: () => setState(() {
+                                    _player.state == PlayerState.PLAYING ? _player.pause() : _player.resume();
+                                  }),
+                                  padding: EdgeInsets.zero,
+                                  icon: Icon(
+                                    _player.state == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
+                                    size: 48,
+                                  ),
+                                ),
+                              ],
                             ),
                             ClipButton(
                               onIncrement: incrementEnd,
