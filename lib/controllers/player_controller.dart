@@ -26,4 +26,9 @@ class PlayerController {
   void seek(Duration d) {
     _player.seek(d);
   }
+
+  void dispose() {
+    _player.stop();
+    _player.dispose();
+  }
 }

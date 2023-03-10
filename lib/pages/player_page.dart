@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:ayat/controllers/player_controller.dart';
+
 import '../models/clip.dart';
 import '../providers/prevs.dart';
 import '../utils/timing.dart';
@@ -43,6 +45,7 @@ class _PlayerPageState extends State<PlayerPage> {
   late AudioPlayer _player;
   late AudioPlayer _clip;
   // late int? _duration;
+  late PlayerController _playerController;
   late int _surahNumber;
   late int _start;
   late int _end;
@@ -67,6 +70,7 @@ class _PlayerPageState extends State<PlayerPage> {
     super.initState();
     Wakelock.toggle(enable: true);
     _surahNumber = widget.surahNumber;
+    _playerController = PlayerController(_surahNumber);
     _start = widget.start;
     _currentVerse = _start;
     _end = widget.end;
@@ -160,8 +164,9 @@ class _PlayerPageState extends State<PlayerPage> {
     if (_delayMode == DelayMode.everAya) _player.resume();
   }
 
-  void onSelect(int verse) async {
+  void onTap(int verse) async {
     if (_selectionMode != null) {
+      // TODO: move this code to a new function.
       if (_selectionMode == SelectionMode.start) {
         if (verse > _tempEnd) _tempEnd = verse;
         setState(() {
@@ -251,7 +256,7 @@ class _PlayerPageState extends State<PlayerPage> {
                     start: _start,
                     end: _end,
                     current: _currentVerse,
-                    tap: onSelect,
+                    tap: onTap,
                     isSelecting: _selectionMode != null,
                     isolatedVers: isolatedVers,
                   ),
