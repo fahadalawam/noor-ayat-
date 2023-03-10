@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'package:ayat/models/clip.dart';
-import 'package:ayat/providers/prevs.dart';
-import 'package:ayat/utils/timing.dart';
+import '../models/clip.dart';
+import '../providers/prevs.dart';
+import '../utils/timing.dart';
 
 import 'package:flutter/gestures.dart';
 
 import 'package:flutter/material.dart';
 
-// import 'package:just_audio/just_audio.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:quran/quran.dart' as quran;
 import 'package:wakelock/wakelock.dart';
@@ -106,22 +105,22 @@ class _PlayerPageState extends State<PlayerPage> {
     });
 
     int _tick = 50;
-    // _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
-    //   if (_player.state == PlayerState.PLAYING) {
-    //     final position = await _player.getCurrentPosition();
+    _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
+      if (_player.state == PlayerState.PLAYING) {
+        final position = await _player.getCurrentPosition();
 
-    //     if (position >= _positions[_currentVerse]) {
-    //       print('ayyya');
-    //       _goToNextVeres();
-    //     }
+        if (position >= _positions[_currentVerse]) {
+          print('ayyya');
+          _goToNextVeres();
+        }
 
-    //     if (position > _positions[_end]){
-    //       print('enddddd');
+        if (position > _positions[_end]) {
+          print('enddddd');
 
-    //     _goToFirstVerse();
-    //     }
-    //   }
-    // });
+          _goToFirstVerse();
+        }
+      }
+    });
   }
 
   Future<void> _startAyaDelay() async {

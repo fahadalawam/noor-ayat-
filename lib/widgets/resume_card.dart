@@ -1,7 +1,7 @@
-import 'package:ayat/providers/prevs.dart';
 import 'package:flutter/material.dart';
 
-import 'package:ayat/pages/player_page.dart';
+import '../providers/prevs.dart';
+import '../pages/player_page.dart';
 import 'package:quran/quran.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -21,8 +21,7 @@ class ResumeCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ListTile(
-            title: Text(
-                'سورة ${getSurahNameArabic(clip.surahNumber)}  .  ${clip.reciter}'),
+            title: Text('سورة ${getSurahNameArabic(clip.surahNumber)}  .  ${clip.reciter}'),
             subtitle: Text('${clip.start} - ${clip.end}'),
             trailing: const Icon(Icons.play_arrow),
             onTap: () => Navigator.push(
