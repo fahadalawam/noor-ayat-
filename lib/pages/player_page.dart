@@ -272,10 +272,10 @@ class _PlayerPageState extends State<PlayerPage> {
                           mainAxisSize: MainAxisSize.max,
                           children: [
                             ClipButton(
-                              onIncrement: incrementStart,
-                              onDecrement: decrementStart,
-                              onSelect: _selectStart,
-                              aya: _start,
+                              onIncrement: _pc.incrementStart,
+                              onDecrement: _pc.decrementStart,
+                              onSelect: () => _pc.startSelectMode(SelectionMode.start),
+                              aya: _pc.start,
                             ),
                             IconButton(
                               // onPressed: () {},
@@ -287,10 +287,10 @@ class _PlayerPageState extends State<PlayerPage> {
                               ),
                             ),
                             ClipButton(
-                              onIncrement: incrementEnd,
-                              onDecrement: decrementEnd,
-                              onSelect: _selectEnd,
-                              aya: _end,
+                              onIncrement: _pc.incrementEnd,
+                              onDecrement: _pc.decrementEnd,
+                              onSelect: () => _pc.startSelectMode(SelectionMode.end),
+                              aya: _pc.end,
                             ),
                           ],
                         ),
@@ -309,30 +309,22 @@ class _PlayerPageState extends State<PlayerPage> {
       children: [
         Text('select a verse.'),
         ElevatedButton(
-            child: Text('Cancel'),
-            onPressed: () {
-              _pc.changeSelectionMode(null);
-              _pc.resume();
-              setState(() {
-                // _selectionMode = null;
-                _start = _tempStart
-                _end = _tempEnd
-                // _pc.resume();
-              });
-            }),
+          child: Text('Cancel'),
+          onPressed: _pc.cancleSelectionMode,
+        ),
       ],
     );
   }
 
-  void _save() {
-    Provider.of<Prevs>(context, listen: false).saveLatest(
-      Clip(
-        surahNumber: _surahNumber,
-        start: _start,
-        end: _end,
-      ),
-    );
-  }
+  // void _save() {
+  //   Provider.of<Prevs>(context, listen: false).saveLatest(
+  //     Clip(
+  //       surahNumber: _surahNumber,
+  //       start: _start,
+  //       end: _end,
+  //     ),
+  //   );
+  // }
 
   // void incrementStart() async {
   //   if (_start >= _positions.length - 1) return;

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
+import '../providers/prevs.dart';
 import '../utils/timing.dart';
+import '../models/clip.dart';
 
 enum SelectionMode { start, end }
 
@@ -18,6 +21,9 @@ class PlayerController extends ChangeNotifier {
   late int _start;
   late int _end;
   int? _isolatedVers;
+
+  late int _tempStart;
+  late int _tempEnd;
 
   bool _isLoading = true;
   bool _isPlayig = false;
@@ -118,25 +124,26 @@ class PlayerController extends ChangeNotifier {
     if (_selectionMode == SelectionMode.start) {
       if (selection > _tempEnd) _tempEnd = selection;
 
-      setState(() {
-        _start = selection;
-        _end = _tempEnd;
-        _currentVerse = _start;
-        _selectionMode = null;
-      });
+      _start = selection;
+      _end = _tempEnd;
+      // _currentVerse = _start;
+      // _selectionMode = null;
     } else if (_selectionMode == SelectionMode.end) {
       if (selection < _tempStart) _tempStart = selection;
 
-      setState(() {
-        _end = selection;
-        _start = _tempStart;
-        _currentVerse = _start;
-        _selectionMode = null;
-      });
+      _end = selection;
+      _start = _tempStart;
+      // _currentVerse = _start;
+      // _selectionMode = null;
     }
 
-    await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
-    _player.resume();
+    _currentVerse = _start;
+    _selectionMode = null;
+
+    goto(_currentVerse);
+    notifyListeners();
+    // await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+    resume();
   }
 
   void pp() {
@@ -190,6 +197,15 @@ class PlayerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void cancleSelectionMode() {
+    _start = _tempStart;
+    _end = _tempEnd;
+    _selectionMode = null;
+    notifyListeners();
+
+    resume();
+  }
+
   void setIsolatedVers(int? vers) {
     _isolatedVers = vers;
     notifyListeners();
@@ -214,7 +230,7 @@ class PlayerController extends ChangeNotifier {
     goto(_currentVerse);
     notifyListeners();
 
-    _save();
+    // _save();
   }
 
   void decrementStart() async {
@@ -223,7 +239,7 @@ class PlayerController extends ChangeNotifier {
     _start--;
     notifyListeners();
 
-    _save();
+    // _save();
   }
 
   void incrementEnd() async {
@@ -232,7 +248,7 @@ class PlayerController extends ChangeNotifier {
     _end++;
     notifyListeners();
 
-    _save();
+    // _save();
   }
 
   void decrementEnd() async {
@@ -247,32 +263,60 @@ class PlayerController extends ChangeNotifier {
     }
     notifyListeners();
 
-    _save();
+    // _save();
   }
 
-  void _selectStart() {
+  void startSelectMode(SelectionMode mode) {
     pause();
 
-    _selectionMode = SelectionMode.start;
+    _selectionMode = mode;
 
     _tempStart = _start;
     _tempEnd = _end;
     _start = 1;
     _end = _positions.length - 1;
 
+    notifyListeners();
     print(_selectionMode);
   }
 
-  void _selectEnd() {
-    _player.pause();
-    setState(() {
-      _selectionMode = SelectionMode.end;
+// TODO: fix save prevs.
+  // void _save() {
+  //   Provider.of<Prevs>(context, listen: false).saveLatest(
+  //     Clip(
+  //       surahNumber: _surahNumber,
+  //       start: _start,
+  //       end: _end,
+  //     ),
+  //   );
+  // }
 
-      _tempStart = _start;
-      _tempEnd = _end;
-      _start = 1;
-      _end = _positions.length - 1;
-    });
-    print(_selectionMode);
-  }
+  // void selectStart() {
+  //   pause();
+
+  //   _selectionMode = SelectionMode.start;
+
+  //   _tempStart = _start;
+  //   _tempEnd = _end;
+  //   _start = 1;
+  //   _end = _positions.length - 1;
+
+  //   notifyListeners();
+  //   print(_selectionMode);
+  // }
+
+  // void selectEnd() {
+  //   pause();
+
+  //   _selectionMode = SelectionMode.end;
+
+  //   _tempStart = _start;
+  //   _tempEnd = _end;
+  //   _start = 1;
+  //   _end = _positions.length - 1;
+
+  //   notifyListeners();
+
+  //   print(_selectionMode);
+  // }
 }
