@@ -20,10 +20,6 @@ import '../widgets/clip_button.dart';
 
 // import 'package:shared_preferences/shared_preferences.dart';
 
-enum SelectionMode { start, end }
-
-enum DelayMode { noDelay, everAya, endOfLoop }
-
 class PlayerPage extends StatefulWidget {
   static const PAGE_NAME = 'player-page/';
 
@@ -42,10 +38,10 @@ class PlayerPage extends StatefulWidget {
 }
 
 class _PlayerPageState extends State<PlayerPage> {
-  late AudioPlayer _player;
-  late AudioPlayer _clip;
+  // late AudioPlayer _player;
+  // late AudioPlayer _clip;
   // late int? _duration;
-  late PlayerController _playerController;
+  late PlayerController _pc;
   late int _surahNumber;
   late int _start;
   late int _end;
@@ -53,39 +49,36 @@ class _PlayerPageState extends State<PlayerPage> {
   late int _tempEnd;
   late int _currentVerse;
   late ScrollController _controller;
-// TODO: get times from API.
   late List<int> _positions;
-  bool _isLoading = true;
-  Duration _waitingDuration = Duration.zero;
+
+  bool _isLoading = false;
 
   late Timer _timer;
 
   int? isolatedVers;
-  SelectionMode? _selectionMode;
-  DelayMode _delayMode = DelayMode.noDelay;
+  // SelectionMode? _selectionMode;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     Wakelock.toggle(enable: true);
     _surahNumber = widget.surahNumber;
-    _playerController = PlayerController(_surahNumber);
     _start = widget.start;
     _currentVerse = _start;
     _end = widget.end;
-    _player = AudioPlayer();
+    // _player = AudioPlayer();
+    _pc = PlayerController();
 
     _controller = ScrollController();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     print('dispos...');
     Wakelock.toggle(enable: false);
-    _player.stop();
-    _player.dispose();
+    _pc.dispose();
+    // _player.stop();
+    // _player.dispose();
     _timer.cancel();
     super.dispose();
   }
@@ -94,123 +87,131 @@ class _PlayerPageState extends State<PlayerPage> {
   void didChangeDependencies() async {
     super.didChangeDependencies();
 
-    String s = _surahNumber.toString().padLeft(3, '0');
+    // String s = _surahNumber.toString().padLeft(3, '0');
     // String s = _surahNumber.toString();
-    _player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
-    await _player.setUrl('https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
+    // _player = AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+    // await _player.setUrl('https://download.quranicaudio.com/qdc/saud_ash-shuraym/murattal/$s.mp3');
+    await _pc.initPlayer(
+      surahNumber: widget.surahNumber,
+      start: widget.start,
+      end: widget.end,
+    );
 
-    await Timing(surahId: _surahNumber).fetchTiming().then((value) {
-      setState(() {
-        _positions = value;
-        _isLoading = false;
-        _player.seek(Duration(milliseconds: _positions[_start - 1]));
-        _player.resume();
-      });
-    });
+    // await Timing(surahId: _surahNumber).fetchTiming().then((value) {
+    //   setState(() {
+    //     _positions = value;
+    //     _isLoading = false;
 
-    int _tick = 50;
-    _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
-      if (_player.state == PlayerState.PLAYING) {
-        final position = await _player.getCurrentPosition();
+    //     _playerController.goto(_start);
 
-        if (position >= _positions[_currentVerse]) {
-          print('ayyya');
-          _goToNextVeres();
-        }
+    //     _player.resume();
+    //   });
+    // });
 
-        if (position > _positions[_end]) {
-          print('enddddd');
+    // int _tick = 50;
+    // TODO: change to stream;
+    // _timer = Timer.periodic(Duration(milliseconds: _tick), (Timer t) async {
+    //   if (_player.state == PlayerState.PLAYING) {
+    //     final position = await _player.getCurrentPosition();
 
-          _goToFirstVerse();
-        }
-      }
-    });
+    //     if (position >= _positions[_currentVerse]) {
+    //       print('ayyya');
+    //       _goToNextVeres();
+    //     }
+
+    //     if (position > _positions[_end]) {
+    //       print('enddddd');
+
+    //       _goToFirstVerse();
+    //     }
+    //   }
+    // });
   }
 
-  Future<void> _startAyaDelay() async {
-    _player.pause();
-    final prevDuration = _currentVerse == 0 ? 0 : _positions[_currentVerse - 1];
-    await Future.delayed(Duration(milliseconds: _positions[_currentVerse] - prevDuration));
-  }
+  // Future<void> _startAyaDelay() async {
+  //   _player.pause();
+  //   final prevDuration = _currentVerse == 0 ? 0 : _positions[_currentVerse - 1];
+  //   await Future.delayed(Duration(milliseconds: _positions[_currentVerse] - prevDuration));
+  // }
 
-  Future<void> _startEndDelay() {
-    _player.pause();
+  // Future<void> _startEndDelay() {
+  //   _player.pause();
 
-    final delay = _positions[_end] - _positions[_start];
-    return Future.delayed(Duration(milliseconds: delay));
-  }
+  //   final delay = _positions[_end] - _positions[_start];
+  //   return Future.delayed(Duration(milliseconds: delay));
+  // }
 
-  void _goToFirstVerse() async {
-    if (_delayMode == DelayMode.endOfLoop) await _startEndDelay();
+  // void _goToFirstVerse() async {
+  //   if (_delayMode == DelayMode.endOfLoop) await _startEndDelay();
 
-    _player.seek(Duration(milliseconds: _positions[_start - 1]));
-    setState(() {
-      _currentVerse = _start;
-      _player.pause();
-      _isLoading = true;
-    });
-    await Future.delayed(const Duration(milliseconds: 1000));
-    setState(() {
-      _isLoading = false;
-      _player.resume();
-    });
-  }
+  //   _player.seek(Duration(milliseconds: _positions[_start - 1]));
+  //   setState(() {
+  //     _currentVerse = _start;
+  //     _player.pause();
+  //     _isLoading = true;
+  //   });
+  //   await Future.delayed(const Duration(milliseconds: 1000));
+  //   setState(() {
+  //     _isLoading = false;
+  //     _player.resume();
+  //   });
+  // }
 
-  void _goToNextVeres() async {
-    if (_delayMode == DelayMode.everAya) await _startAyaDelay();
-    setState(() {
-      _currentVerse++;
-    });
-    if (_delayMode == DelayMode.everAya) _player.resume();
-  }
+  // void _goToNextVeres() async {
+  //   if (_delayMode == DelayMode.everAya) await _startAyaDelay();
+  //   setState(() {
+  //     _currentVerse++;
+  //   });
+  //   if (_delayMode == DelayMode.everAya) _player.resume();
+  // }
 
-  void onTap(int verse) async {
-    if (_selectionMode != null) {
-      // TODO: move this code to a new function.
-      if (_selectionMode == SelectionMode.start) {
-        if (verse > _tempEnd) _tempEnd = verse;
-        setState(() {
-          _start = verse;
-          _end = _tempEnd;
-          _currentVerse = _start;
-          _selectionMode = null;
-        });
-      }
+  // void _changeLoopLength(int selection) async {
+  //   if (_selectionMode == SelectionMode.start) {
+  //     if (selection > _tempEnd) _tempEnd = selection;
 
-      if (_selectionMode == SelectionMode.end) {
-        if (verse < _tempStart) _tempStart = verse;
-        setState(() {
-          _end = verse;
-          _start = _tempStart;
-          _currentVerse = _start;
-          _selectionMode = null;
-        });
-      }
+  //     setState(() {
+  //       _start = selection;
+  //       _end = _tempEnd;
+  //       _currentVerse = _start;
+  //       _selectionMode = null;
+  //     });
+  //   } else if (_selectionMode == SelectionMode.end) {
+  //     if (selection < _tempStart) _tempStart = selection;
 
-      await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
-      _player.resume();
+  //     setState(() {
+  //       _end = selection;
+  //       _start = _tempStart;
+  //       _currentVerse = _start;
+  //       _selectionMode = null;
+  //     });
+  //   }
+
+  //   await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+  //   _player.resume();
+  // }
+
+  void _onTap(int verse) async {
+    if (_pc.selectionMode != null) {
+      _pc.changeLoopLength(verse);
       return;
     }
 
-    if (isolatedVers != null) {
-      setState(() {
-        isolatedVers = null;
-      });
+    if (_pc.isolatedVers != null) {
+      _pc.setIsolatedVers(null);
       return;
     }
 
-    if (verse == _currentVerse) {
+    if (verse == _pc.currentVeres) {
       print('** ACTIVATER ISOLAITION MODE for vers $verse');
-      setState(() {
-        isolatedVers = verse;
-      });
+      _pc.setIsolatedVers(verse);
       return;
     }
 
-    setState(() {
-      _currentVerse = verse;
-    });
-    await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+    _pc.goto(verse);
+    // setState(() {
+    //   _currentVerse = verse;
+    // });
+    // await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
   }
 
   @override
@@ -226,13 +227,9 @@ class _PlayerPageState extends State<PlayerPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             DropdownButton<DelayMode>(
-              onChanged: (val) {
-                setState(() {
-                  if (val != null) _delayMode = val;
-                });
-              },
-              value: _delayMode,
-              items: [
+              onChanged: (val) => _pc.changeDelayMode(val),
+              value: _pc.currentDelayMode,
+              items: const [
                 DropdownMenuItem(
                   value: DelayMode.noDelay,
                   child: Text('لا تتوقف'),
@@ -256,8 +253,8 @@ class _PlayerPageState extends State<PlayerPage> {
                     start: _start,
                     end: _end,
                     current: _currentVerse,
-                    tap: onTap,
-                    isSelecting: _selectionMode != null,
+                    tap: _onTap,
+                    isSelecting: _pc.selectionMode != null,
                     isolatedVers: isolatedVers,
                   ),
                 ),
@@ -267,9 +264,9 @@ class _PlayerPageState extends State<PlayerPage> {
               height: 150,
               width: double.infinity,
               color: Colors.grey,
-              child: _selectionMode != null
-                  ? _showSelectPanel()
-                  : _isLoading
+              child: _pc.selectionMode != null
+                  ? _selectPanel()
+                  : _pc.isLoading
                       ? Center(child: CircularProgressIndicator())
                       : Row(
                           mainAxisSize: MainAxisSize.max,
@@ -282,12 +279,10 @@ class _PlayerPageState extends State<PlayerPage> {
                             ),
                             IconButton(
                               // onPressed: () {},
-                              onPressed: () => setState(() {
-                                _player.state == PlayerState.PLAYING ? _player.pause() : _player.resume();
-                              }),
+                              onPressed: _pc.pp,
                               padding: EdgeInsets.zero,
                               icon: Icon(
-                                _player.state == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
+                                _pc.isPlaying ? Icons.pause : Icons.play_arrow,
                                 size: 48,
                               ),
                             ),
@@ -306,7 +301,8 @@ class _PlayerPageState extends State<PlayerPage> {
     );
   }
 
-  Widget _showSelectPanel() {
+// FIXME: complete implementation of change loop length function
+  Widget _selectPanel() {
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -315,94 +311,99 @@ class _PlayerPageState extends State<PlayerPage> {
         ElevatedButton(
             child: Text('Cancel'),
             onPressed: () {
+              _pc.changeSelectionMode(null);
+              _pc.resume();
               setState(() {
-                _selectionMode = null;
-                _start = _tempStart;
-                _end = _tempEnd;
+                // _selectionMode = null;
+                _start = _tempStart
+                _end = _tempEnd
+                // _pc.resume();
               });
-              // _player.play();
             }),
       ],
     );
   }
 
   void _save() {
-    Provider.of<Prevs>(context, listen: false).saveLatest(Clip(
-      surahNumber: _surahNumber,
-      start: _start,
-      end: _end,
-    ));
+    Provider.of<Prevs>(context, listen: false).saveLatest(
+      Clip(
+        surahNumber: _surahNumber,
+        start: _start,
+        end: _end,
+      ),
+    );
   }
 
-  void incrementStart() async {
-    if (_start >= _positions.length - 1) return;
+  // void incrementStart() async {
+  //   if (_start >= _positions.length - 1) return;
 
-    setState(() {
-      _start++;
-      if (_start > _end) _end++;
-    });
+  //   setState(() {
+  //     _start++;
+  //     if (_start > _end) _end++;
+  //   });
 
-    if (_start <= _currentVerse) return;
-    _currentVerse = _start;
-    await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+  //   if (_start <= _currentVerse) return;
+  //   _currentVerse = _start;
+  //   // await _player.seek(Duration(milliseconds: _positions[_currentVerse - 1]));
+  //   _pc.goto(_currentVerse);
 
-    _save();
-  }
+  //   _save();
+  // }
 
-  void decrementStart() async {
-    if (_start <= 1) return;
-    setState(() {
-      _start = _start - 1;
-    });
+  // void decrementStart() async {
+  //   if (_start <= 1) return;
+  //   setState(() {
+  //     _start = _start - 1;
+  //   });
 
-    _save();
-  }
+  //   _save();
+  // }
 
-  void incrementEnd() async {
-    if (_end >= _positions.length - 1) return;
-    setState(() {
-      _end = _end + 1;
-    });
+  // void incrementEnd() async {
+  //   if (_end >= _positions.length - 1) return;
+  //   setState(() {
+  //     _end = _end + 1;
+  //   });
 
-    _save();
-  }
+  //   _save();
+  // }
 
-  void decrementEnd() async {
-    if (_end <= 1) return;
-    setState(() {
-      _end--;
-      if (_end <= _start) _start = _end;
-      if (_end < _currentVerse) {
-        _currentVerse = _start;
-        _player.seek(Duration(milliseconds: _positions[_start - 1]));
-      }
-    });
-    _save();
-  }
+  // void decrementEnd() async {
+  //   if (_end <= 1) return;
+  //   setState(() {
+  //     _end--;
+  //     if (_end <= _start) _start = _end;
+  //     if (_end < _currentVerse) {
+  //       _currentVerse = _start;
+  //       _player.seek(Duration(milliseconds: _positions[_start - 1]));
+  //     }
+  //   });
+  //   _save();
+  // }
 
-  void _selectStart() {
-    _player.pause();
-    setState(() {
-      _selectionMode = SelectionMode.start;
+  // void _selectStart() {
+  //   _player.pause();
+  //   setState(() {
+  //     _selectionMode = SelectionMode.start;
 
-      _tempStart = _start;
-      _tempEnd = _end;
-      _start = 1;
-      _end = _positions.length - 1;
-    });
-    print(_selectionMode);
-  }
+  //     _tempStart = _start;
+  //     _tempEnd = _end;
+  //     _start = 1;
+  //     _end = _positions.length - 1;
+  //   });
+  //   print(_selectionMode);
+  // }
 
-  void _selectEnd() {
-    _player.pause();
-    setState(() {
-      _selectionMode = SelectionMode.end;
+  // void _selectEnd() {
+  //   _player.pause();
+  //   setState(() {
+  //     _selectionMode = SelectionMode.end;
 
-      _tempStart = _start;
-      _tempEnd = _end;
-      _start = 1;
-      _end = _positions.length - 1;
-    });
-    print(_selectionMode);
-  }
+  //     _tempStart = _start;
+  //     _tempEnd = _end;
+  //     _start = 1;
+  //     _end = _positions.length - 1;
+  //   });
+  //   print(_selectionMode);
+  // }
 }

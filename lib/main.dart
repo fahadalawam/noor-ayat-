@@ -1,3 +1,5 @@
+import 'package:ayat/controllers/player_controller.dart';
+
 import './providers/prevs.dart';
 import 'package:flutter/material.dart';
 import './pages/home_page.dart';
@@ -6,8 +8,15 @@ import 'package:provider/provider.dart';
 void main() {
   // runApp(const MyApp());
   runApp(
-    ChangeNotifierProvider(
-      create: ((context) => Prevs()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: ((context) => PlayerController()),
+        ),
+        ChangeNotifierProvider(
+          create: ((context) => Prevs()),
+        ),
+      ],
       child: const MyApp(),
     ),
   );

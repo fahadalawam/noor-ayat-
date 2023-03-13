@@ -30,7 +30,7 @@ class QuranText extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: RichText(
         textDirection: TextDirection.rtl,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.justify,
         textScaleFactor: 1,
         textWidthBasis: TextWidthBasis.parent,
         strutStyle: StrutStyle(
